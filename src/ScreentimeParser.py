@@ -14,80 +14,44 @@ Sources:
 3. https://github.com/mac4n6/APOLLO/tree/bd725461fbd22c8ceadd04f0c4ded49b66147439 
 """
 
-db = os.getenv("DB")
-print("looking for: ", f"../../{db}")
-if os.path.exists(f"../../{db}"):
-    print("DB exists where we think it does")
 
-print()
-print("Attempting to connect to DB")
+class ScreentimeParser:
 
-connection = sqlite3.connect(f"./../{db}")
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.df = None
 
-print('connection established...')
-print()
+    def connect_to_db(self):
 
-cursor = connection.cursor()
+        try:
+            if os.path.exists(self.filepath):
+                connection = sqlite3.connect(self.filepath)
+                cursor = connection.cursor()
+                return cursor, connection
+        except Exception as e:
+            print("Connecting to DB failed. Try checking to make sure the entire path is there (including the DB)")
+            return e
 
-# PREVIOUS QUERIES THAT WORK
-"""
+    def run_query(self, cursor, query):
+        try:
+            cursor.execute(query)
+            output = cursor.fetchall()
+            return output
+        except Exception as e:
+            print("Query failed. Review exception below for guidance")
+            return e
 
-- "SELECT name FROM sqlite_master WHERE type='table';"
-- "SELECT DISTINCT ZOBJECT.ZSTREAMNAME FROM ZOBJECT ORDER BY ZSTREAMNAME;"
+    def get_app_usage_data(self, filepath):
+        with open("assets/queries/app_usage.txt", "r") as file:
+            query = file.read()
 
+        cursor, connection = self.connect_to_db()
+        output = self.run_query(cursor=cursor, query=query)
+        connection.close()
 
-"""
-
-
-app_data_query = """
-SELECT
-  DATETIME(ZOBJECT.ZSTARTDATE + 978307200, 'UNIXEPOCH') AS 'START',
-  DATETIME(ZOBJECT.ZENDDATE + 978307200, 'UNIXEPOCH') AS 'END',
-  ZOBJECT.ZVALUESTRING AS 'BUNDLE ID',
-  (ZOBJECT.ZENDDATE - ZOBJECT.ZSTARTDATE) AS 'USAGE IN SECONDS',
-  (ZOBJECT.ZENDDATE - ZOBJECT.ZSTARTDATE) / 60.00 AS 'USAGE IN MINUTES',
-  ZSOURCE.ZDEVICEID AS 'DEVICE ID (HARDWARE UUID)',
-  ZCUSTOMMETADATA.ZNAME AS 'NAME',
-  ZCUSTOMMETADATA.ZDOUBLEVALUE AS 'VALUE',
-  CASE ZOBJECT.ZSTARTDAYOFWEEK
-    WHEN '1' THEN 'Sunday'
-    WHEN '2' THEN 'Monday'
-    WHEN '3' THEN 'Tuesday'
-    WHEN '4' THEN 'Wednesday'
-    WHEN '5' THEN 'Thursday'
-    WHEN '6' THEN 'Friday'
-    WHEN '7' THEN 'Saturday'
-  END AS 'DAY OF WEEK',
-  ZOBJECT.ZSECONDSFROMGMT / 3600 AS 'GMT OFFSET',
-  DATETIME(ZOBJECT.ZCREATIONDATE + 978307200, 'UNIXEPOCH') AS 'ENTRY CREATION',
-  ZOBJECT.ZUUID AS 'UUID',
-  ZSTRUCTUREDMETADATA.ZMETADATAHASH,
-  ZOBJECT.Z_PK AS 'ZOBJECT TABLE ID'
-FROM ZOBJECT
-  LEFT JOIN ZSTRUCTUREDMETADATA
-    ON ZOBJECT.ZSTRUCTUREDMETADATA = ZSTRUCTUREDMETADATA.Z_PK
-  LEFT JOIN ZSOURCE
-    ON ZOBJECT.ZSOURCE = ZSOURCE.Z_PK
-  LEFT JOIN Z_4EVENT
-    ON ZOBJECT.Z_PK = Z_4EVENT.Z_11EVENT
-  LEFT JOIN ZCUSTOMMETADATA
-    ON Z_4EVENT.Z_4CUSTOMMETADATA = ZCUSTOMMETADATA.Z_PK
-WHERE ZSTREAMNAME = '/app/usage'
-ORDER BY START DESC;
-"""
-
-
-try:
-    cursor.execute(app_data_query)
-    response = cursor.fetchall()
-    output_df = pd.DataFrame(response)
-    output_df.to_csv("../knowledge.csv")
-
-except Exception as e:
-    print("query did not work for following reason:", e)
-
-connection.close()
+        tmp_df = pd.DataFrame(output)
+        tmp_df.to_csv(filepath+'app-usage-data.csv')
 
 
 
-print("Closed")
+

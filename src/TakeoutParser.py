@@ -24,13 +24,11 @@ class TakeoutParser:
         """
 
         # read in HTML file as a string
-        print("reading in the file")
+
         with open(file_path, 'r') as html_doc_reader:
             content = html_doc_reader.read()
-        print("done reading the file")
 
         # soupify
-        print('soupifying')
         soup = bs4.BeautifulSoup(content, "html.parser")
 
         # visits
@@ -41,14 +39,15 @@ class TakeoutParser:
         dates = []
         times = []
 
-        print(f"Need to search through {len(visits)} records")
+        # print(f"Need to search through {len(visits)} records")
         for v in visits:
             try:
                 # class ="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1" >
                 # I did this with the help of ChatGPT - mainly just figuring out how to parse the HTML correctly.
                 # I identified the tags and class names that I needed, but used ChatGPT for the function calls
                 c = v.find(class_="mdl-typography--title").get_text()
-                date = v.find(class_="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1").find_all("br")[-1].find_next_sibling(text=True).strip()
+                date = v.find(class_="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1").find_all("br")[
+                    -1].find_next_sibling(text=True).strip()
                 date = date.replace("\u202f", " ")
 
                 # datetime formatting
@@ -77,7 +76,6 @@ class TakeoutParser:
         )
         return tmp_df
 
-
     def find_class_variables(self):
         """
             Look for class names in the HTML file to get the correct content. More of an automated approach in case the HTML changes
@@ -103,7 +101,7 @@ class TakeoutParser:
 
         files = os.listdir(self.directory)
 
-        print(f"Beginning HTML extraction for {self.directory} directory")
+        # print(f"Beginning HTML extraction for {self.directory} directory")
         html_files = []
         for f in files:
             file_ending = f.split(".")[1]
@@ -112,14 +110,14 @@ class TakeoutParser:
 
         total = len(html_files)
         i = 1
+
         for f in html_files:
 
             # PERCENTAGE COMPLETION PRINTING MECHANISM (inspired from ChatGPT, minor modifications made)
-            # percent = (i / total) * 100  # Calculate percentage
-            # bar = "#" * (i // 2)  # Progress bar (half-length)
-            # spaces = " " * (total - len(bar))  # Padding to keep the bar aligned
-            # print(f"\r[{bar}{spaces}] {percent:.2f}%", end="")  # Print on the same line
-            print(f"Working on {f}")
+            percent = (i / total) * 100  # Calculate percentage
+            bar = "#" * (i)  # Progress bar (half-length)
+            spaces = " " * (total - len(bar))  # Padding to keep the bar aligned
+            print(f"\r[{bar}{spaces}] {percent:.2f}%", end="")  # Print on the same line
 
             # logic
             tmp_df = self.parse_html(self.directory + "/" + f)
@@ -136,7 +134,7 @@ class TakeoutParser:
         :param file_path:
         :return: None
         """
-        pass
+        self.df.to_csv(file_path)
 
     def write_out_json(self, file_path):
         """
@@ -147,5 +145,3 @@ class TakeoutParser:
         :return: None
         """
         pass
-
-
