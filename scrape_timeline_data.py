@@ -1,4 +1,5 @@
 import bs4
+import os
 
 
 class TakeoutParser:
@@ -13,8 +14,16 @@ class TakeoutParser:
         """
         purpose: Extract the date, time, and content that I accessed/searched for. Everything looks to be the same structure.
 
-        :param file_path:
+        :param file_path: the path to a single HTML file
         :return: dataframe object with the data we need to know times I access things
+        """
+        pass
+
+    def parse_ics(self, file_path):
+        """
+
+        :param file_path:
+        :return:
         """
         pass
 
@@ -24,4 +33,28 @@ class TakeoutParser:
         :param directory: directory containing all the files we need to parse to get data
         :return:
         """
+
+        files = os.listdir(self.directory)
+
         pass
+
+    def write_out_csv(self, file_path):
+        """
+        Purpose: write the dataframe that we scrape out to a CSV file
+
+        :param file_path:
+        :return: None
+        """
+        pass
+
+    def write_out_json(self, file_path):
+        """
+
+        Purpose: Write the dataframe that we scrape out to a JSON file
+
+        :param file_path:
+        :return: None
+        """
+        pass
+
+
