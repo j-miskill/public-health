@@ -26,16 +26,14 @@ class ScreentimeParser:
         try:
             if os.path.exists(self.filepath):
                 connection = sqlite3.connect(self.filepath)
-                cursor = connection.cursor()
-                return cursor, connection
+                return connection
         except Exception as e:
             print("Connecting to DB failed. Try checking to make sure the entire path is there (including the DB)")
             return e
 
-    def run_query(self, cursor, query):
+    def run_query(self, connection, query):
         try:
-            cursor.execute(query)
-            output = cursor.fetchall()
+            output = pd.read_sql_query(query, connection)
             return output
         except Exception as e:
             print("Query failed. Review exception below for guidance")
@@ -45,12 +43,10 @@ class ScreentimeParser:
         with open("assets/queries/app_usage.txt", "r") as file:
             query = file.read()
 
-        cursor, connection = self.connect_to_db()
-        output = self.run_query(cursor=cursor, query=query)
+        connection = self.connect_to_db()
+        output = self.run_query(connection=connection, query=query)
         connection.close()
-
-        tmp_df = pd.DataFrame(output)
-        tmp_df.to_csv(filepath+'app-usage-data.csv')
+        output.to_csv(filepath+'app-usage-data.csv')
 
 
 
