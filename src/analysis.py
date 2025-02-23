@@ -13,19 +13,40 @@ if __name__ == "__main__":
     st_data['date'] = pd.to_datetime(st_data['START']).dt.date
     st_data['time'] = pd.to_datetime(st_data['START']).dt.time
 
-    earliest_times = st_data.groupby("date")['time'].min().reset_index()
+    print(st_data.shape[0])
+    print(st_data['date'].unique().shape[0])
+
+    #
+
+    earliest_times_pre_filter = st_data[(st_data['time'] > pd.to_datetime("06:00:00").time())]
+
+    earliest_times = earliest_times_pre_filter.groupby("date")['time'].min().reset_index()
     latest_times = st_data.groupby("date")['time'].max().reset_index()
 
-    noon = pd.to_datetime("12:00:00").time()
+    two = pd.to_datetime("14:00:00").time()
     six_am = pd.to_datetime("06:00:00").time()
     seven = pd.to_datetime("19:00:00").time()
 
-    earliest_times_filtered = earliest_times[(earliest_times['time'] < noon) & (earliest_times['time'] > six_am)]
-    latest_times_filtered = latest_times[latest_times['time'] > seven]
+    earliest_times_filtered = earliest_times[(earliest_times['time'] < two)]
+    earliest_times_filtered = earliest_times_filtered.sort_values(by='time', ascending=True)
+    earliest_times_filtered['timedelta'] = pd.to_timedelta(earliest_times_filtered['time'].astype(str))
 
-    print(earliest_times_filtered)
-    print()
-    print(latest_times_filtered)
+    latest_times_filtered = latest_times[latest_times['time'] > seven]
+    latest_times_filtered = latest_times_filtered.sort_values(by='time', ascending=True)
+    latest_times_filtered['timedelta'] = pd.to_timedelta(latest_times_filtered['time'].astype(str))
+
+    mean_earliest = earliest_times_filtered['timedelta'].mean()
+    median_earliest = earliest_times_filtered['timedelta'].median()
+
+    mean_latest = latest_times_filtered['timedelta'].mean()
+    median_latest = latest_times_filtered['timedelta'].median()
+
+    print(f"Mean and median earliest: {mean_earliest}, {median_earliest}")
+    print(f"Mean and median latest: {mean_latest}, {median_latest}")
+
+
+
+
 
     # takeout_data['date'] = pd.to_datetime(takeout_data['date'])
     # takeout_data['time'] = pd.to_datetime(takeout_data['time'])
